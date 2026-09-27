@@ -1,6 +1,14 @@
 import { deepEqual } from './deepEqual';
 import { toPointer } from './pointer';
-import { ABSENT, isAbsent, isPlainObject, type JsonValue, type SideValue } from './types';
+import {
+  ABSENT,
+  getOwn,
+  hasOwn,
+  isAbsent,
+  isPlainObject,
+  type JsonValue,
+  type SideValue,
+} from './types';
 
 /**
  * 输入阶段的「变更交叉分析」：基于 Base / Ours / Theirs，分别计算两侧相对基线的
@@ -140,8 +148,8 @@ function collectSideChanges(
     pushKeys(side);
     for (const k of keys) {
       collectSideChanges(
-        k in baseObj ? baseObj[k] : ABSENT,
-        k in side ? side[k] : ABSENT,
+        hasOwn(baseObj, k) ? getOwn(baseObj, k)! : ABSENT,
+        hasOwn(side, k) ? getOwn(side, k)! : ABSENT,
         [...segments, k],
         out,
       );

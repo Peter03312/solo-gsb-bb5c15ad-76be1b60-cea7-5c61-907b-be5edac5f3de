@@ -3,6 +3,8 @@ import type { MergeResult, Resolution } from './threeWayMerge';
 import { toPointer } from './pointer';
 import {
   ABSENT,
+  getOwn,
+  hasOwn,
   isAbsent,
   isPlainObject,
   type JsonValue,
@@ -111,7 +113,7 @@ function validateSide(
       violations.push({ side, index, message: `第 ${index} 项不是对象` });
       return;
     }
-    if (!(field in raw)) {
+    if (!hasOwn(raw, field)) {
       violations.push({
         side,
         index,
@@ -119,7 +121,7 @@ function validateSide(
       });
       return;
     }
-    const id = raw[field];
+    const id = getOwn(raw, field);
     if (!isIdentityValue(id)) {
       violations.push({
         side,

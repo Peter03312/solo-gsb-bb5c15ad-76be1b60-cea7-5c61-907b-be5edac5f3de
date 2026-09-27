@@ -1,6 +1,14 @@
 import { deepEqual } from './deepEqual';
 import { getBySegments, toPointer } from './pointer';
-import { isPlainObject, ABSENT, isAbsent, type JsonValue, type SideValue } from './types';
+import {
+  getOwn,
+  hasOwn,
+  isPlainObject,
+  ABSENT,
+  isAbsent,
+  type JsonValue,
+  type SideValue,
+} from './types';
 import type { MergeResult, Resolution, Resolutions } from './threeWayMerge';
 
 /**
@@ -171,8 +179,8 @@ export function buildDecisionTrace(
     if (!isPlainObject(base) || !isPlainObject(adopted)) return false;
     const baseKeys = Object.keys(base);
     const adoptedKeys = Object.keys(adopted);
-    const removed = baseKeys.some((k) => !(k in adopted));
-    const added = adoptedKeys.some((k) => !(k in base));
+    const removed = baseKeys.some((k) => !hasOwn(adopted, k));
+    const added = adoptedKeys.some((k) => !hasOwn(base, k));
     return !(removed && added);
   };
 
@@ -216,9 +224,9 @@ export function buildDecisionTrace(
     pushKeys(theirsObj);
     for (const k of keys) {
       classify(
-        k in baseObj ? baseObj[k] : ABSENT,
-        k in oursObj ? oursObj[k] : ABSENT,
-        k in theirsObj ? theirsObj[k] : ABSENT,
+        hasOwn(baseObj, k) ? getOwn(baseObj, k)! : ABSENT,
+        hasOwn(oursObj, k) ? getOwn(oursObj, k)! : ABSENT,
+        hasOwn(theirsObj, k) ? getOwn(theirsObj, k)! : ABSENT,
         [...segments, k],
       );
     }

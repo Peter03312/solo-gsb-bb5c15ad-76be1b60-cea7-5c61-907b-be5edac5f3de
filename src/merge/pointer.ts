@@ -1,4 +1,4 @@
-import type { JsonValue } from './types';
+import { getOwn, hasOwn, isPlainObject, type JsonValue } from './types';
 
 /** RFC 6901：转义路径段（~ -> ~0，/ -> ~1） */
 export function escapeSegment(seg: string): string {
@@ -32,8 +32,11 @@ export function getBySegments(doc: JsonValue, segments: string[]): JsonValue | u
       const idx = Number(seg);
       if (!Number.isInteger(idx)) return undefined;
       cur = cur[idx];
+    } else if (isPlainObject(cur) && hasOwn(cur, seg)) {
+      // 只遍历自有键：/__proto__ 应读到 JSON 自身的数据，而非 Object.prototype
+      cur = getOwn(cur, seg);
     } else {
-      cur = (cur as Record<string, JsonValue>)[seg];
+      return undefined;
     }
   }
   return cur;

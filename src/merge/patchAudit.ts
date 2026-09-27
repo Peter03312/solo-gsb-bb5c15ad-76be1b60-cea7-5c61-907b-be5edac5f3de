@@ -1,7 +1,7 @@
 import { deepEqual } from './deepEqual';
 import { applyJsonPatch, parseJsonPatch, type PatchFailure } from './jsonPatch';
 import { escapeSegment, getBySegments, parsePointer } from './pointer';
-import { isPlainObject, type JsonValue } from './types';
+import { getOwn, hasOwn, isPlainObject, type JsonValue } from './types';
 
 /**
  * 输出阶段的“补丁审计”：把用户编辑后的 RFC 6902 补丁按顺序应用到基线的一份独立副本上，
@@ -78,9 +78,9 @@ function walk(
     // 父级均为对象时才逐键比较；一侧不是对象（如对象 vs 标量）已在前面判为不相等
     if (!expectedIsObj || !actualIsObj) return at(segments, expected, actual);
     const keys: string[] = [...Object.keys(expected)];
-    for (const k of Object.keys(actual)) if (!(k in expected)) keys.push(k);
+    for (const k of Object.keys(actual)) if (!hasOwn(expected, k)) keys.push(k);
     for (const k of keys) {
-      const hit = walk(expected[k], actual[k], [...segments, escapeSegment(k)]);
+      const hit = walk(getOwn(expected, k), getOwn(actual, k), [...segments, escapeSegment(k)]);
       if (hit) return hit;
     }
     return null;

@@ -1,6 +1,15 @@
 import { deepEqual } from './deepEqual';
 import { toPointer } from './pointer';
-import { ABSENT, isAbsent, isPlainObject, type JsonValue, type SideValue } from './types';
+import {
+  ABSENT,
+  getOwn,
+  hasOwn,
+  isAbsent,
+  isPlainObject,
+  setOwn,
+  type JsonValue,
+  type SideValue,
+} from './types';
 
 /** 节点合并状态 */
 export type NodeStatus =
@@ -111,9 +120,9 @@ function mergeValue(
     node.status = 'object';
     node.children = keys.map((k) =>
       mergeValue(
-        k in baseObj ? baseObj[k] : ABSENT,
-        k in ours ? ours[k] : ABSENT,
-        k in theirs ? theirs[k] : ABSENT,
+        hasOwn(baseObj, k) ? getOwn(baseObj, k)! : ABSENT,
+        hasOwn(ours, k) ? getOwn(ours, k)! : ABSENT,
+        hasOwn(theirs, k) ? getOwn(theirs, k)! : ABSENT,
         k,
         [...segments, k],
         conflicts,
@@ -123,7 +132,8 @@ function mergeValue(
     const assembled: Record<string, JsonValue> = {};
     for (const child of node.children) {
       if (child.status !== 'conflict' && !isAbsent(child.merged)) {
-        assembled[child.key] = child.merged;
+        // 用 defineProperty 写入：__proto__ 等键直接赋值会命中原型 setter 而丢键
+        setOwn(assembled, child.key, child.merged);
       }
     }
     node.merged = assembled;
@@ -182,7 +192,7 @@ export function buildMerged(root: MergeNode, resolutions: Resolutions): SideValu
     for (const child of root.children) {
       const v = buildMerged(child, resolutions);
       if (v === undefined) return undefined;
-      if (!isAbsent(v)) out[child.key] = v;
+      if (!isAbsent(v)) setOwn(out, child.key, v);
     }
     return out;
   }

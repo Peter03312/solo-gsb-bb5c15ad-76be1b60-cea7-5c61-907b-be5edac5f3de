@@ -1,5 +1,5 @@
 import { getBySegments, toPointer, unescapeSegment } from './pointer';
-import { isPlainObject, type JsonValue } from './types';
+import { getOwn, hasOwn, isPlainObject, type JsonValue } from './types';
 
 /**
  * 输出阶段的「引用完整性检查」：用户以 JSON 文本配置规则列表，每条规则指定
@@ -188,10 +188,10 @@ function buildTargetIndex(
       ok = false;
     };
     if (!isPlainObject(el)) return fail(`第 ${i + 1} 项不是对象`);
-    if (!(rule.identity in el)) {
+    if (!hasOwn(el, rule.identity)) {
       return fail(`第 ${i + 1} 项缺少身份字段 ${JSON.stringify(rule.identity)}`);
     }
-    const id = el[rule.identity];
+    const id = getOwn(el, rule.identity);
     if (typeof id !== 'string' && typeof id !== 'number') {
       return fail(`第 ${i + 1} 项身份字段 ${JSON.stringify(rule.identity)} 必须是字符串或数字`);
     }
@@ -254,8 +254,8 @@ function collectRefs(
       next = value[idx];
       found = true;
     }
-  } else if (isPlainObject(value) && key in value) {
-    next = value[key];
+  } else if (isPlainObject(value) && hasOwn(value, key)) {
+    next = getOwn(value, key);
     found = true;
   }
   if (!found) {

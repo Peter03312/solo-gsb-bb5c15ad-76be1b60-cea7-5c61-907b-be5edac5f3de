@@ -1,6 +1,6 @@
 import { deepEqual } from './deepEqual';
 import { escapeSegment } from './pointer';
-import { isPlainObject, type JsonValue } from './types';
+import { getOwn, hasOwn, isPlainObject, type JsonValue } from './types';
 
 export type PatchOp =
   | { op: 'add'; path: string; value: JsonValue }
@@ -22,16 +22,16 @@ function diffInto(base: JsonValue, target: JsonValue, path: string, ops: PatchOp
 
   if (isPlainObject(base) && isPlainObject(target)) {
     for (const k of Object.keys(base)) {
-      if (!(k in target)) {
+      if (!hasOwn(target, k)) {
         ops.push({ op: 'remove', path: path + '/' + escapeSegment(k) });
       }
     }
     for (const k of Object.keys(target)) {
       const childPath = path + '/' + escapeSegment(k);
-      if (!(k in base)) {
-        ops.push({ op: 'add', path: childPath, value: target[k] });
+      if (!hasOwn(base, k)) {
+        ops.push({ op: 'add', path: childPath, value: getOwn(target, k)! });
       } else {
-        diffInto(base[k], target[k], childPath, ops);
+        diffInto(getOwn(base, k)!, getOwn(target, k)!, childPath, ops);
       }
     }
     return;
