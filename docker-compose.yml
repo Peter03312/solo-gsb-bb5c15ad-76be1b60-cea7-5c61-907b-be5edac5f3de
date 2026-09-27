@@ -1,0 +1,14 @@
+services:
+  json-merge:
+    build: .
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    # 初始化完成后（nginx 可响应）即视为健康；
+    # 用 127.0.0.1 而非 localhost：容器内 localhost 可能解析到 IPv6 回环 ::1，
+    # 而 nginx 仅监听 IPv4（listen 80），经 ::1 连接会被拒绝导致健康检查失败
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
